@@ -1,31 +1,32 @@
 // components/DreamForm.tsx
 
 import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
+import { DEFAULT_TAGS } from '@/constants/Tags';
 import { DreamData } from '@/interfaces/DreamData';
 import { AsyncStorageService } from '@/services/AsyncStorageService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
-  Dimensions,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View,
+    Dimensions,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    TouchableWithoutFeedback,
+    View
 } from 'react-native';
-import { Button, Checkbox, TextInput } from 'react-native-paper';
+import { Button, Menu, TextInput } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
 export default function DreamForm() {
+  const [title, setTitle] = useState<string>('');
   const [dreamText, setDreamText] = useState<string>('');
-  const [isLucidDream, setIsLucidDream] = useState<boolean>(false);
   const [date, setDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [tagInput, setTagInput] = useState<string>('')
-  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showTagMenu, setShowTagMenu] = useState<boolean>(false);
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -44,9 +45,10 @@ export default function DreamForm() {
 
       // Ajouter le nouveau rêve avec la date formatée
       formDataArray.push({ 
+        title,
         dreamText, 
-        isLucidDream, 
-        date: formatDate(date)
+        date: formatDate(date),
+        tags: selectedTags
       });
 
       await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, formDataArray);
@@ -60,8 +62,9 @@ export default function DreamForm() {
       console.error('Erreur lors de la sauvegarde des données:', error);
     }
 
+    setTitle('');
     setDreamText('');
-    setIsLucidDream(false);
+    setSelectedTags([]);
     setDate(new Date());
   };
 
@@ -72,6 +75,14 @@ export default function DreamForm() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
+          <TextInput
+            label="Titre du rêve"
+            value={title}
+            onChangeText={setTitle}
+            mode="outlined"
+            style={[styles.input, { width: width * 0.8, alignSelf: 'center' }]}
+          />
+
           <Button
             mode="outlined"
             onPress={() => setShowDatePicker(true)}
@@ -98,13 +109,34 @@ export default function DreamForm() {
             style={[styles.input, { width: width * 0.8, alignSelf: 'center' }]}
           />
 
-          <View style={styles.checkboxContainer}>
-            <Checkbox.Item
-              label="Rêve Lucide"
-              status={isLucidDream ? 'checked' : 'unchecked'}
-              onPress={() => setIsLucidDream(!isLucidDream)}
-            />
-          </View>
+          <Button 
+            mode="outlined"
+            onPress={() => setShowTagMenu(true)}
+            style={[styles.input, { width: width * 0.8, alignSelf: 'center' }]}
+          >
+            {selectedTags.length > 0 ? selectedTags.join(', ') : 'Sélectionner des tags'}
+          </Button>
+
+          <Menu
+            visible={showTagMenu}
+            onDismiss={() => setShowTagMenu(false)}
+            anchor={{ x: width * 0.1, y: Platform.OS === 'ios' ? 250 : 200 }}
+          >
+            {DEFAULT_TAGS.map((tag) => (
+              <Menu.Item
+                key={tag}
+                onPress={() => {
+                  setSelectedTags((prev) =>
+                    prev.includes(tag)
+                      ? prev.filter((t) => t !== tag)
+                      : [...prev, tag]
+                  );
+                }}
+                title={tag}
+                leadingIcon={selectedTags.includes(tag) ? 'check' : undefined}
+              />
+            ))}
+          </Menu>
 
           <Button
             mode="contained"

@@ -1,6 +1,7 @@
 // Définition du type pour un rêve
 export interface DreamData {
+  title: string;
   dreamText: string;
-  isLucidDream: boolean;
-  date: string; 
+  date: string;
+  tags: string[];
 }

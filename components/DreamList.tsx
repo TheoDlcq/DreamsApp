@@ -6,8 +6,8 @@ import { AsyncStorageService } from '@/services/AsyncStorageService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
+import { Button, Card, Chip, Text } from 'react-native-paper';
 
 
 export default function DreamList() {
@@ -53,16 +53,26 @@ export default function DreamList() {
     };
 
     return (
-        <View>
-            <Text style={styles.title}>Liste des Rêves :</Text>
+        <ScrollView style={styles.scrollView}>
+            <Text style={styles.title}>Liste des Rêves</Text>
             {dreams.length > 0 ? (
                 dreams.map((dream, index) => (
-                    <Text key={index} style={styles.dreamText}>
-                        {dream.date ? `${dream.date} : ` : ''}{dream.dreamText} - {dream.isLucidDream ? 'Lucide' : 'Non Lucide'}{' '}
-                    </Text>
+                    <Card key={index} style={styles.card}>
+                        <Card.Title title={dream.title} subtitle={dream.date} />
+                        <Card.Content>
+                            <Text style={styles.dreamText}>{dream.dreamText}</Text>
+                            <View style={styles.tagsContainer}>
+                                {dream.tags.map((tag, tagIndex) => (
+                                    <Chip key={tagIndex} style={styles.tag} mode="outlined">
+                                        {tag}
+                                    </Chip>
+                                ))}
+                            </View>
+                        </Card.Content>
+                    </Card>
                 ))
             ) : (
-                <Text style={styles.dreamText}>Aucun rêve enregistré</Text>
+                <Text style={styles.emptyText}>Aucun rêve enregistré</Text>
             )}
 
             <Button
@@ -70,23 +80,47 @@ export default function DreamList() {
                 onPress={handleResetDreams}
                 style={styles.button}
             >
-                Reset Dreams
+                Réinitialiser les rêves
             </Button>
-        </View>
+        </ScrollView>
     );
 }
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
+    scrollView: {
+        flex: 1,
+        padding: 16,
+    },
     title: {
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 8,
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    card: {
+        marginBottom: 16,
+        width: width - 32,
     },
     dreamText: {
         fontSize: 16,
-        marginBottom: 4,
+        marginBottom: 12,
+    },
+    emptyText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 20,
     },
     button: {
+        marginVertical: 16,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         marginTop: 8,
+    },
+    tag: {
+        margin: 4,
     },
 });
