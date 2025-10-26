@@ -61,10 +61,25 @@ export default function DreamList() {
                         <Card.Title title={dream.title} subtitle={dream.date} />
                         <Card.Content>
                             <Text style={styles.dreamText}>{dream.dreamText}</Text>
+                            <Text style={styles.sectionTitle}>Tags :</Text>
                             <View style={styles.tagsContainer}>
                                 {dream.tags.map((tag, tagIndex) => (
                                     <Chip key={tagIndex} style={styles.tag} mode="outlined">
                                         {tag}
+                                    </Chip>
+                                ))}
+                            </View>
+                            
+                            <Text style={styles.sectionTitle}>Personnages :</Text>
+                            <View style={styles.tagsContainer}>
+                                {dream.characters.map((character, charIndex) => (
+                                    <Chip 
+                                        key={charIndex} 
+                                        style={styles.tag} 
+                                        mode="outlined"
+                                        icon="account"
+                                    >
+                                        {character}
                                     </Chip>
                                 ))}
                             </View>
@@ -107,6 +122,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 12,
     },
+    sectionTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginTop: 12,
+        marginBottom: 4,
+    },
     emptyText: {
         fontSize: 16,
         textAlign: 'center',
@@ -118,7 +139,7 @@ const styles = StyleSheet.create({
     tagsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginTop: 8,
+        marginBottom: 8,
     },
     tag: {
         margin: 4,

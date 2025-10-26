@@ -4,4 +4,5 @@ export interface DreamData {
   dreamText: string;
   date: string;
   tags: string[];
+  characters: string[];
 }

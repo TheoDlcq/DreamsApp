@@ -1,6 +1,7 @@
 // components/DreamForm.tsx
 
 import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
+import { DEFAULT_CHARACTERS } from '@/constants/Characters';
 import { DEFAULT_TAGS } from '@/constants/Tags';
 import { DreamData } from '@/interfaces/DreamData';
 import { AsyncStorageService } from '@/services/AsyncStorageService';
@@ -27,6 +28,8 @@ export default function DreamForm() {
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagMenu, setShowTagMenu] = useState<boolean>(false);
+  const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
+  const [showCharacterMenu, setShowCharacterMenu] = useState<boolean>(false);
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -48,7 +51,8 @@ export default function DreamForm() {
         title,
         dreamText, 
         date: formatDate(date),
-        tags: selectedTags
+        tags: selectedTags,
+        characters: selectedCharacters
       });
 
       await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, formDataArray);
@@ -65,6 +69,7 @@ export default function DreamForm() {
     setTitle('');
     setDreamText('');
     setSelectedTags([]);
+    setSelectedCharacters([]);
     setDate(new Date());
   };
 
@@ -134,6 +139,35 @@ export default function DreamForm() {
                 }}
                 title={tag}
                 leadingIcon={selectedTags.includes(tag) ? 'check' : undefined}
+              />
+            ))}
+          </Menu>
+
+          <Button 
+            mode="outlined"
+            onPress={() => setShowCharacterMenu(true)}
+            style={[styles.input, { width: width * 0.8, alignSelf: 'center' }]}
+          >
+            {selectedCharacters.length > 0 ? selectedCharacters.join(', ') : 'Sélectionner des personnages'}
+          </Button>
+
+          <Menu
+            visible={showCharacterMenu}
+            onDismiss={() => setShowCharacterMenu(false)}
+            anchor={{ x: width * 0.1, y: Platform.OS === 'ios' ? 300 : 250 }}
+          >
+            {DEFAULT_CHARACTERS.map((character) => (
+              <Menu.Item
+                key={character}
+                onPress={() => {
+                  setSelectedCharacters((prev) =>
+                    prev.includes(character)
+                      ? prev.filter((c) => c !== character)
+                      : [...prev, character]
+                  );
+                }}
+                title={character}
+                leadingIcon={selectedCharacters.includes(character) ? 'check' : undefined}
               />
             ))}
           </Menu>
