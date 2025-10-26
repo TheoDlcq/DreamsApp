@@ -26,6 +26,12 @@ export default function DreamList() {
                 characters: Array.isArray(item?.characters) ? item.characters : [],
                 emotionBefore: item?.emotionBefore ?? '',
                 emotionAfter: item?.emotionAfter ?? '',
+                emotionBeforeIntensity: typeof item?.emotionBeforeIntensity === 'number' ? item.emotionBeforeIntensity : (item?.emotionBeforeIntensity ? Number(item.emotionBeforeIntensity) : 0),
+                emotionAfterIntensity: typeof item?.emotionAfterIntensity === 'number' ? item.emotionAfterIntensity : (item?.emotionAfterIntensity ? Number(item.emotionAfterIntensity) : 0),
+                clarity: typeof item?.clarity === 'number' ? item.clarity : (item?.clarity ? Number(item.clarity) : 0),
+                sleepQuality: typeof item?.sleepQuality === 'number' ? item.sleepQuality : (item?.sleepQuality ? Number(item.sleepQuality) : 0),
+                meaning: item?.meaning ?? '',
+                tone: item?.tone ?? '',
             }));
 
             setDreams(formDataArray);
@@ -81,14 +87,21 @@ export default function DreamList() {
                                 <View style={styles.emotionBox}>
                                     <Text style={styles.emotionLabel}>Avant le rêve</Text>
                                     <Text style={styles.emotionText}>{dream.emotionBefore || 'Non spécifié'}</Text>
+                                    <Text style={styles.emotionSmall}>Intensité: {dream.emotionBeforeIntensity || '—'}</Text>
                                 </View>
                                 <View style={styles.emotionBox}>
                                     <Text style={styles.emotionLabel}>Après le rêve</Text>
                                     <Text style={styles.emotionText}>{dream.emotionAfter || 'Non spécifié'}</Text>
+                                    <Text style={styles.emotionSmall}>Intensité: {dream.emotionAfterIntensity || '—'}</Text>
                                 </View>
                             </View>
                             
                             <Text style={styles.dreamText}>{dream.dreamText}</Text>
+                            
+                            <View style={styles.ratingsContainer}>
+                                <Text style={styles.ratingItem}>Clarté: <Text style={styles.ratingValue}>{dream.clarity || '—'}</Text></Text>
+                                <Text style={styles.ratingItem}>Sommeil: <Text style={styles.ratingValue}>{dream.sleepQuality || '—'}</Text></Text>
+                            </View>
                             
                             <Text style={styles.sectionTitle}>Tags</Text>
                             <View style={styles.tagsContainer}>
@@ -216,5 +229,23 @@ const styles = StyleSheet.create({
     emotionText: {
         fontSize: 14,
         color: '#2c3e50',
+    },
+    ratingsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    ratingItem: {
+        fontSize: 13,
+        color: '#2c3e50',
+    },
+    ratingValue: {
+        fontWeight: 'bold',
+        color: '#2c3e50',
+    },
+    emotionSmall: {
+        fontSize: 12,
+        color: '#7f8c8d',
+        marginTop: 6,
     },
 });
