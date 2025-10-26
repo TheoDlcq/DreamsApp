@@ -4,8 +4,9 @@ import { DEFAULT_CHARACTERS } from '@/constants/Characters';
 import { DEFAULT_TAGS } from '@/constants/Tags';
 import { DreamData } from '@/interfaces/DreamData';
 import { AsyncStorageService } from '@/services/AsyncStorageService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { Button, Menu, Text, TextInput } from 'react-native-paper';
 
@@ -34,6 +35,7 @@ export default function DreamForm() {
   const [sleepQuality, setSleepQuality] = useState(0);
   const [meaning, setMeaning] = useState('');
   const [tone, setTone] = useState<'positive'|'negative'|'neutral'|''>('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const formatDate = (d: Date) => {
     try { return d.toLocaleDateString(); } catch { return ''; }
@@ -63,9 +65,22 @@ export default function DreamForm() {
     };
 
     try {
-      const existing = await AsyncStorageService.getData(AsyncStorageConfig.keys.dreamsArrayKey);
-      const next = Array.isArray(existing) ? [...existing, newDream] : [newDream];
+      const existing = await AsyncStorageService.getData(AsyncStorageConfig.keys.dreamsArrayKey) || [];
+      let next: any[] = [];
+      if (editingIndex !== null && typeof editingIndex === 'number' && editingIndex >= 0 && editingIndex < existing.length) {
+        next = [...existing];
+        next[editingIndex] = newDream;
+      } else {
+        next = Array.isArray(existing) ? [...existing, newDream] : [newDream];
+      }
       await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, next);
+
+      // clear edit draft if any
+      if (editingIndex !== null) {
+        await AsyncStorage.removeItem('dreamEdit');
+        await AsyncStorage.removeItem('dreamEditIndex');
+        setEditingIndex(null);
+      }
 
   // reset
   setTitle(''); setDreamText(''); setDate(new Date()); setLocation('');
@@ -74,6 +89,33 @@ export default function DreamForm() {
   setClarity(0); setSleepQuality(0); setMeaning(''); setTone('');
     } catch (e) { console.error(e); }
   };
+
+  useEffect(() => {
+    const loadDraft = async () => {
+      try {
+        const raw = await AsyncStorage.getItem('dreamEdit');
+        const idx = await AsyncStorage.getItem('dreamEditIndex');
+        if (raw) {
+          const d = JSON.parse(raw);
+          setTitle(d.title || '');
+          setDreamText(d.dreamText || '');
+          setLocation(d.location || '');
+          setEmotionBefore(d.emotionBefore || '');
+          setEmotionAfter(d.emotionAfter || '');
+          setEmotionBeforeIntensity(typeof d.emotionBeforeIntensity === 'number' ? d.emotionBeforeIntensity : 0);
+          setEmotionAfterIntensity(typeof d.emotionAfterIntensity === 'number' ? d.emotionAfterIntensity : 0);
+          setClarity(typeof d.clarity === 'number' ? d.clarity : 0);
+          setSleepQuality(typeof d.sleepQuality === 'number' ? d.sleepQuality : 0);
+          setMeaning(d.meaning || '');
+          setTone(d.tone || '');
+          setSelectedTags(Array.isArray(d.tags) ? d.tags : []);
+          setSelectedCharacters(Array.isArray(d.characters) ? d.characters : []);
+          if (idx) setEditingIndex(Number(idx));
+        }
+      } catch (e) { console.error(e); }
+    };
+    loadDraft();
+  }, []);
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

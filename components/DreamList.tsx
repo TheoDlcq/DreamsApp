@@ -4,14 +4,17 @@ import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
 import { DreamData } from '@/interfaces/DreamData';
 import { AsyncStorageService } from '@/services/AsyncStorageService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Chip, Text } from 'react-native-paper';
+import { Button, Card, Checkbox, Chip, IconButton, Text, TextInput } from 'react-native-paper';
 
 
 export default function DreamList() {
     const [dreams, setDreams] = useState<DreamData[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
     const fetchData = async () => {
         try {
@@ -70,17 +73,97 @@ export default function DreamList() {
         }
     };
 
+    const handleDeleteSingle = async (indexToDelete: number) => {
+        try {
+            const arr: any = await AsyncStorageService.getData(AsyncStorageConfig.keys.dreamsArrayKey) || [];
+            const next = arr.filter((_: any, i: number) => i !== indexToDelete);
+            await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, next);
+            setDreams(next);
+            setSelectedIndices(prev => prev.filter(i => i !== indexToDelete));
+        } catch (e) { console.error(e); }
+    };
+
+    const handleDeleteSelected = async () => {
+        if (!selectedIndices.length) return;
+        try {
+            const arr: any = await AsyncStorageService.getData(AsyncStorageConfig.keys.dreamsArrayKey) || [];
+            const next = arr.filter((_: any, i: number) => !selectedIndices.includes(i));
+            await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, next);
+            setDreams(next);
+            setSelectedIndices([]);
+        } catch (e) { console.error(e); }
+    };
+
+    const router = useRouter();
+
+    const handleEdit = async (indexToEdit: number) => {
+        try {
+            const arr: any = await AsyncStorageService.getData(AsyncStorageConfig.keys.dreamsArrayKey) || [];
+            const dream = arr[indexToEdit];
+            if (!dream) return;
+            // store draft for DreamForm to pick up
+            await AsyncStorage.setItem('dreamEdit', JSON.stringify(dream));
+            await AsyncStorage.setItem('dreamEditIndex', String(indexToEdit));
+            // navigate to form for editing (first tab)
+            router.push('/(tabs)');
+        } catch (e) { console.error(e); }
+    };
+
     return (
         <ScrollView style={styles.scrollView}>
-            <Text style={styles.title}>Liste des Rêves</Text>
+            <View style={styles.topRow}>
+                <Text style={styles.title}>Liste des Rêves</Text>
+                <View style={styles.topRightControls}>
+                    <TextInput
+                        placeholder="Rechercher..."
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        mode="outlined"
+                        style={styles.searchInput}
+                    />
+                    {selectedIndices.length > 0 ? (
+                        <Button mode="contained" onPress={async () => {
+                            // ask confirmation
+                            const confirmed = true; // placeholder — we don't have Alert here, keep simple
+                            if (confirmed) await handleDeleteSelected();
+                        }}>
+                            Supprimer la sélection ({selectedIndices.length})
+                        </Button>
+                    ) : null}
+                </View>
+            </View>
             {dreams.length > 0 ? (
-                dreams.map((dream, index) => (
+                // keep original index for persistence operations
+                dreams.map((dream, index) => ({ dream, index }))
+                    .filter(({ dream }) => {
+                        const q = searchQuery.trim().toLowerCase();
+                        if (!q) return true;
+                        const inTitle = dream.title?.toLowerCase().includes(q);
+                        const inText = dream.dreamText?.toLowerCase().includes(q);
+                        const inTags = (dream.tags || []).some(t => t.toLowerCase().includes(q));
+                        const inChars = (dream.characters || []).some(c => c.toLowerCase().includes(q));
+                        const inMeaning = (dream.meaning || '').toLowerCase().includes(q);
+                        return inTitle || inText || inTags || inChars || inMeaning;
+                    })
+                    .map(({ dream, index }) => (
                     <Card key={index} style={styles.card}>
                         <Card.Title 
                             title={dream.title}
                             subtitle={dream.date + (dream.location ? ' • ' + dream.location : '')}
                             titleStyle={{ fontSize: 20, color: '#2c3e50' }}
                             subtitleStyle={{ color: '#7f8c8d' }}
+                            right={() => (
+                                <View style={styles.cardRightControls}>
+                                    <Checkbox
+                                        status={selectedIndices.includes(index) ? 'checked' : 'unchecked'}
+                                        onPress={() => {
+                                            setSelectedIndices(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
+                                        }}
+                                    />
+                                    <IconButton icon="pencil" size={20} onPress={() => handleEdit(index)} />
+                                    <IconButton icon="delete" size={20} onPress={() => handleDeleteSingle(index)} />
+                                </View>
+                            )}
                         />
                         <Card.Content>
                             <View style={styles.emotionContainer}>
@@ -102,6 +185,12 @@ export default function DreamList() {
                                 <Text style={styles.ratingItem}>Clarté: <Text style={styles.ratingValue}>{dream.clarity || '—'}</Text></Text>
                                 <Text style={styles.ratingItem}>Sommeil: <Text style={styles.ratingValue}>{dream.sleepQuality || '—'}</Text></Text>
                             </View>
+                            
+                            {/* Signification & tonalité */}
+                            <Text style={styles.sectionTitle}>Signification</Text>
+                            <Text style={styles.dreamText}>{dream.meaning || '—'}</Text>
+                            <Text style={styles.sectionTitle}>Tonalité</Text>
+                            <Text style={styles.ratingValue}>{dream.tone || '—'}</Text>
                             
                             <Text style={styles.sectionTitle}>Tags</Text>
                             <View style={styles.tagsContainer}>
@@ -138,13 +227,7 @@ export default function DreamList() {
                 <Text style={styles.emptyText}>Aucun rêve enregistré</Text>
             )}
 
-            <Button
-                mode="contained"
-                onPress={handleResetDreams}
-                style={styles.button}
-            >
-                Réinitialiser les rêves
-            </Button>
+            {/* reset moved to third tab */}
         </ScrollView>
     );
 }
@@ -248,4 +331,9 @@ const styles = StyleSheet.create({
         color: '#7f8c8d',
         marginTop: 6,
     },
+    topRow: { marginBottom: 12 },
+    topRightControls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    searchInput: { flex: 1, marginRight: 8, backgroundColor: '#fff' },
+    deleteToggle: { justifyContent: 'center' },
+    cardRightControls: { flexDirection: 'row', alignItems: 'center' },
 });

@@ -1,8 +1,10 @@
 // app/(tabs)/three.tsx
 
 import { Text, View } from '@/components/Themed';
+import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
 import { DEFAULT_CHARACTERS } from '@/constants/Characters';
 import { DEFAULT_TAGS } from '@/constants/Tags';
+import { AsyncStorageService } from '@/services/AsyncStorageService';
 import { useState } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { Button, Chip, TextInput } from 'react-native-paper';
@@ -32,6 +34,12 @@ export default function TabThreeScreen() {
     } else if (activeTab === 'characters' && !DEFAULT_CHARACTERS.includes(itemToRemove)) {
       setCharacters(characters.filter(char => char !== itemToRemove));
     }
+  };
+
+  const handleResetDreams = async () => {
+    try {
+      await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, []);
+    } catch (e) { console.error(e); }
   };
 
   return (
@@ -87,6 +95,9 @@ export default function TabThreeScreen() {
               {item}
             </Chip>
           ))}
+        </View>
+        <View style={{ marginTop: 16 }}>
+          <Button mode="contained" onPress={handleResetDreams} icon="trash-can-outline">Réinitialiser les rêves</Button>
         </View>
       </View>
     </View>
