@@ -32,6 +32,7 @@ export default function DreamForm() {
   const [showCharacterMenu, setShowCharacterMenu] = useState<boolean>(false);
   const [emotionBefore, setEmotionBefore] = useState<string>('');
   const [emotionAfter, setEmotionAfter] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -53,6 +54,7 @@ export default function DreamForm() {
         title,
         dreamText, 
         date: formatDate(date),
+        location,
         tags: selectedTags,
         characters: selectedCharacters,
         emotionBefore,
@@ -70,13 +72,14 @@ export default function DreamForm() {
       console.error('Erreur lors de la sauvegarde des données:', error);
     }
 
-    setTitle('');
-    setDreamText('');
-    setSelectedTags([]);
-    setSelectedCharacters([]);
-    setEmotionBefore('');
-    setEmotionAfter('');
-    setDate(new Date());
+  setTitle('');
+  setDreamText('');
+  setLocation('');
+  setSelectedTags([]);
+  setSelectedCharacters([]);
+  setEmotionBefore('');
+  setEmotionAfter('');
+  setDate(new Date());
   };
 
   return (
@@ -95,13 +98,23 @@ export default function DreamForm() {
               style={[styles.input, { width: width * 0.8 }]}
             />
 
-          <Button
-            mode="outlined"
-            onPress={() => setShowDatePicker(true)}
-            style={[styles.input, { width: width * 0.8, alignSelf: 'center' }]}
-          >
-            {formatDate(date)}
-          </Button>
+          <View style={styles.row}>
+            <Button
+              mode="outlined"
+              onPress={() => setShowDatePicker(true)}
+              style={[styles.input, { flex: 1, marginRight: 8 }]}
+            >
+              {formatDate(date)}
+            </Button>
+
+            <TextInput
+              label="Lieu"
+              value={location}
+              onChangeText={setLocation}
+              mode="outlined"
+              style={[styles.input, { flex: 1 }]}
+            />
+          </View>
           
           {showDatePicker && (
             <DateTimePicker
@@ -231,5 +244,11 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: 24,
     paddingVertical: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 8,
   },
 });

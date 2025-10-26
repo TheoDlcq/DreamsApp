@@ -17,11 +17,11 @@ export default function DreamList() {
         try {
             const rawArray: any = await AsyncStorageService.getData(AsyncStorageConfig.keys.dreamsArrayKey);
 
-            // Normaliser les éléments: certains anciens objets peuvent manquer de champs
             const formDataArray: DreamData[] = (rawArray || []).map((item: any) => ({
                 title: item?.title ?? '',
                 dreamText: item?.dreamText ?? item?.text ?? '',
                 date: item?.date ?? '',
+                location: item?.location ?? item?.city ?? '',
                 tags: Array.isArray(item?.tags) ? item.tags : [],
                 characters: Array.isArray(item?.characters) ? item.characters : [],
                 emotionBefore: item?.emotionBefore ?? '',
@@ -72,7 +72,7 @@ export default function DreamList() {
                     <Card key={index} style={styles.card}>
                         <Card.Title 
                             title={dream.title}
-                            subtitle={dream.date}
+                            subtitle={dream.date + (dream.location ? ' • ' + dream.location : '')}
                             titleStyle={{ fontSize: 20, color: '#2c3e50' }}
                             subtitleStyle={{ color: '#7f8c8d' }}
                         />

@@ -7,4 +7,5 @@ export interface DreamData {
   characters: string[];
   emotionBefore: string;
   emotionAfter: string;
+  location: string;
 }
