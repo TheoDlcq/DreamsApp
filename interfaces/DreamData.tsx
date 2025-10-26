@@ -5,4 +5,6 @@ export interface DreamData {
   date: string;
   tags: string[];
   characters: string[];
+  emotionBefore: string;
+  emotionAfter: string;
 }

@@ -9,13 +9,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
-    Dimensions,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    TouchableWithoutFeedback,
-    View
+  Dimensions,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View
 } from 'react-native';
 import { Button, Menu, TextInput } from 'react-native-paper';
 
@@ -30,6 +30,8 @@ export default function DreamForm() {
   const [showTagMenu, setShowTagMenu] = useState<boolean>(false);
   const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
   const [showCharacterMenu, setShowCharacterMenu] = useState<boolean>(false);
+  const [emotionBefore, setEmotionBefore] = useState<string>('');
+  const [emotionAfter, setEmotionAfter] = useState<string>('');
 
   const onDateChange = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -52,7 +54,9 @@ export default function DreamForm() {
         dreamText, 
         date: formatDate(date),
         tags: selectedTags,
-        characters: selectedCharacters
+        characters: selectedCharacters,
+        emotionBefore,
+        emotionAfter
       });
 
       await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, formDataArray);
@@ -70,6 +74,8 @@ export default function DreamForm() {
     setDreamText('');
     setSelectedTags([]);
     setSelectedCharacters([]);
+    setEmotionBefore('');
+    setEmotionAfter('');
     setDate(new Date());
   };
 
@@ -80,13 +86,14 @@ export default function DreamForm() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          <TextInput
-            label="Titre du rêve"
-            value={title}
-            onChangeText={setTitle}
-            mode="outlined"
-            style={[styles.input, { width: width * 0.8, alignSelf: 'center' }]}
-          />
+          <View style={styles.card}>
+            <TextInput
+              label="Titre du rêve"
+              value={title}
+              onChangeText={setTitle}
+              mode="outlined"
+              style={[styles.input, { width: width * 0.8 }]}
+            />
 
           <Button
             mode="outlined"
@@ -175,10 +182,11 @@ export default function DreamForm() {
           <Button
             mode="contained"
             onPress={handleDreamSubmission}
-            style={styles.button}
+            style={styles.submitButton}
           >
             Soumettre
           </Button>
+        </View>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -186,20 +194,42 @@ export default function DreamForm() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  scrollView: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
+    width: width * 0.9,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   input: {
     marginBottom: 16,
+    backgroundColor: '#fff',
   },
-  checkboxContainer: {
+  emotionContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    width: '100%',
   },
-  button: {
-    marginTop: 8,
+  emotionInput: {
+    width: '48%',
+  },
+  submitButton: {
+    marginTop: 24,
+    paddingVertical: 8,
   },
 });
