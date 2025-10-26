@@ -1,39 +1,53 @@
 // components/DreamForm.tsx
 
+import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
+import { DreamData } from '@/interfaces/DreamData';
+import { AsyncStorageService } from '@/services/AsyncStorageService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
-  View,
-  StyleSheet,
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
   Platform,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
-import { TextInput, Button, Checkbox } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DreamData } from '@/interfaces/DreamData';
-import { AsyncStorageService } from '@/services/AsyncStorageService';
-import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
-
+import { Button, Checkbox, TextInput } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
 export default function DreamForm() {
   const [dreamText, setDreamText] = useState<string>('');
   const [isLucidDream, setIsLucidDream] = useState<boolean>(false);
+  const [date, setDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [tagInput, setTagInput] = useState<string>('')
   const [tags, setTags] = useState<string[]>([]);
 
+  const onDateChange = (_event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  };
 
+  const formatDate = (date: Date): string => {
+    return date.toLocaleDateString('fr-FR');
+  };
 
   const handleDreamSubmission = async (): Promise<void> => {
     try {
-
       const formDataArray: DreamData[] = await AsyncStorageService.getData(AsyncStorageConfig.keys.dreamsArrayKey);
 
-      // Ajouter le nouveau rêve
-      formDataArray.push({ dreamText, isLucidDream });
+      // Ajouter le nouveau rêve avec la date formatée
+      formDataArray.push({ 
+        dreamText, 
+        isLucidDream, 
+        date: formatDate(date)
+      });
 
       await AsyncStorageService.setData(AsyncStorageConfig.keys.dreamsArrayKey, formDataArray);
 
@@ -48,6 +62,7 @@ export default function DreamForm() {
 
     setDreamText('');
     setIsLucidDream(false);
+    setDate(new Date());
   };
 
   return (
@@ -57,6 +72,22 @@ export default function DreamForm() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
+          <Button
+            mode="outlined"
+            onPress={() => setShowDatePicker(true)}
+            style={[styles.input, { width: width * 0.8, alignSelf: 'center' }]}
+          >
+            {formatDate(date)}
+          </Button>
+          
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onDateChange}
+            />
+          )}
           <TextInput
             label="Rêve"
             value={dreamText}

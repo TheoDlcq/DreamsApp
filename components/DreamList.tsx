@@ -1,13 +1,13 @@
 // components/DreamList.tsx
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from 'expo-router';
-import { Button } from 'react-native-paper';
+import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
 import { DreamData } from '@/interfaces/DreamData';
 import { AsyncStorageService } from '@/services/AsyncStorageService';
-import { AsyncStorageConfig } from '@/constants/AsyncStorageConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Button } from 'react-native-paper';
 
 
 export default function DreamList() {
@@ -58,7 +58,7 @@ export default function DreamList() {
             {dreams.length > 0 ? (
                 dreams.map((dream, index) => (
                     <Text key={index} style={styles.dreamText}>
-                        {dream.dreamText} - {dream.isLucidDream ? 'Lucide' : 'Non Lucide'}{' '}
+                        {dream.date ? `${dream.date} : ` : ''}{dream.dreamText} - {dream.isLucidDream ? 'Lucide' : 'Non Lucide'}{' '}
                     </Text>
                 ))
             ) : (
